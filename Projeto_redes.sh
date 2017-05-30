@@ -13,7 +13,8 @@ IP=$( dialog --stdout --ok-label Continuar --cancel-label Cancelar	\
 0 0)
 	ip addr add $IP dev $MENU
  	elif [ $DIG == 1 ]; then 
-	ip add dhclient $MENU
+	ip addr flush dev $MENU 
+	dhclient $MENU
 	QNT
 fi
 }
@@ -29,7 +30,7 @@ MOV=$( dialog --stdout						\
 0 0)
 
 DIG=$?
-if [ $DIG == 0 ]; then 
+if [ $DIG == 0 ]; then
 	ip addr del $MOV dev $REM
 	QNT
 fi
@@ -47,13 +48,43 @@ fi
 #}
 #-------------------------------------------------------------------#
 function ADP(){
-AT=$( dialog --stdout --oklabel Continuar --cancel-label Cancelar	\
+AT=$( dialog --stdout --ok-label Continuar --cancel-label Cancelar	\
 	--title 'Ativando ou desativando a placa'			\
 	--menu 'Escolha a opção desejada: '				\
 	0 0 0								\
 	AT 'Ativar a interface'						\
 	DE 'Desativar interface'					\
 	VO 'Voltar')
+if [ $AT == 'AT' ]; then
+INTERFACE=$( dialog --stdout --ok-label Continuar --cancel-label Cancelar\
+	--title 'Ativando a interface'					\
+	--inputbox 'Qual interface deseja ativar:'			\
+	0 0)
+ip link set $INTERFACE up
+		elif [ $AT == 'DE' ]; then
+	INTERFACE=$( dialog --stdout --ok-label Continuar --cancel-label Cancelar\
+	--title 'Desativando a interface'					\
+	--inputbox 'Qual interface deseja desativar:'			\
+	0 0)
+ip link set $INTERFACE down
+
+		elif [ $AT == 'VO' ]; then
+		QNT
+fi
+}
+#------------------------------------------------------------------#
+function CONFDHCP(){
+DHCP=$( dialog --stdout --ok-label Continuar  --cancel-label Cancelar\
+	--title 'Configurar interface em dhcp'				\
+	--inputbox 'Digite a interface desejada:'			\
+	0 0)
+DIG=$?
+if [ $DIG == 0]; then 
+	ip addr flush dev $DHCP
+	dhclient $DHCP
+	else
+	QNT
+fi
 }
 ##########################MENU##################################
 function QNT(){
@@ -65,13 +96,15 @@ REDE=$( dialog --stdout					\
 	2 'Configurar Gateway'				\
 	3 'Remover IP'					\
 	4 'Ativando ou desativando a placa'		\
-	5 'Voltar')
+	5 'Configurar interface em dhcp'		\
+	6 'Voltar')
 case $REDE in 
 	1) CONFIP ;;
 	2) CONFIGAT ;;
  	3) REMIP ;;
 	4) ADP ;;
-	5)  QNT ;;
+	5) CONFDHCP ;; 
+	6) QNT ;;
 esac
 }
 QNT
